@@ -2,19 +2,20 @@
 #### By Robert B. Kaspar
 
 ## Usage
-    usage: ./hanabi_wrapper.py player1 player2 [player3 ...] n_rounds verbosity
-      playeri: cheater
-      n_rounds: positive integer
+    usage: ./hanabi_wrapper.py p1 p2 [player3 ...] game_type n_rounds verbosity
+      pi (AI for player i): cheater or basic
+      game_type: rainbow, purple, or vanilla
+      n_rounds: positive int
       verbosity: silent, scores, or verbose
 
 There is no maximum number of players.  With more than 5, the hand size is
 still 4 cards.
 
 ## Example usage
-    $ ./hanabi_wrapper.py cheater cheater 1000 silent
+    $ ./hanabi_wrapper.py cheater cheater purple 1000 silent
 or
 
-    $ ./hanabi_wrapper.py cheater cheater cheater cheater 3 verbose
+    $ ./hanabi_wrapper.py cheater cheater cheater cheater rainbow 3 verbose
 
 ## Example output
     AVERAGE SCORE (+/- 1 std. err.): 23.54 +/- 0.09
@@ -41,7 +42,8 @@ or
     Score: 28 
 
 ## How to write your own AI player
-`CheatingIdiot` is the only player I've made so far.  Use it as a guide.
+`CheatingIdiot` is the only one I've made so far.  Use it as a guide.  Ben Zax
+has also contributed a more respectable `MostBasic` player.
 
 Just make a player class with a `play` method whose only argument is a `Round`
 instance.  (`Round` stores all of the game information for a single round.)
@@ -55,8 +57,8 @@ representing a color or number).  See `Round.get_play()` in `hanabi_classes.py`
 for more info.
 
 You'll want to use the information available to you from other players' hands,
-the tableau, the discard pile, and how many hints are available to inform your
-AI's choices.  This info is available in the `Round` object; see especially
+the tableau, the discard pile, and how many hints are left to inform your AI's
+choices.  This info is available in the `Round` object; see especially
 `Round.__init__()`.  Note that player hands are stored as sub-objects of
 `Round`.  For example, in `Round` instance `r` a list of player i's cards is
 available as `r.h[i].cards`.  (Don't look at your own cards unless you're
