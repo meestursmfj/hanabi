@@ -51,7 +51,7 @@ class Round:
     deck (list of str)
     """
 
-    def __init__(self, gameType, names, verbosity):
+    def __init__(self, gameType, names, verbosity, deck=None):
         """Instantiate a Round and its Hand sub-objects."""
         self.gameType  = gameType
         self.suits = VANILLA_SUITS
@@ -85,18 +85,28 @@ class Round:
             ch.setLevel(logging.INFO)
             self.logger.addHandler(ch)
 
-    def generate_deck_and_deal_hands(self):
-        """Construct a deck, shuffle, and deal."""
-        deck = []
+
+        # Generate the full set of cards for the round.
+        fullDeck = []
         for suit in self.suits:
             for number in SUIT_CONTENTS:
-                deck.append(number + suit)
+                fullDeck.append(number + suit)
 
-        self.cardsLeft = deepcopy(deck) # Start tracking unplayed cards.
+        self.cardsLeft = fullDeck
 
+        if deck:
+            # TODO: make sure deck aligns with the gametype properly
+            self.deck = deck
+        else:
+            self.generate_deck()
+
+    def generate_deck(self):
+        # Create a deck by shuffling the available cards.
+        deck = deepcopy(self.cardsLeft)
         random.shuffle(deck)
         self.deck = deck
 
+    def deal_hands(self):
         handSize = 4
         if self.nPlayers < 4:
             handSize += 1
