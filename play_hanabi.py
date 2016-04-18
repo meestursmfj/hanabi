@@ -20,7 +20,7 @@ def play_one_round(gameType, players, names, verbosity, deck=None):
         if r.lightning == N_LIGHTNING:
             return 0 # Award no points for a loss.  TODO: togglable behavior?
 
-        r.get_play(players[r.whoseTurn]) # Play one turn.
+        r.ai_play(players[r.whoseTurn]) # Play one turn.
 
     return sum(r.progress.values()) # Final score
 

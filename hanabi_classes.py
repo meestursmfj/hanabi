@@ -144,11 +144,12 @@ class Round:
                         "' '".join(directKnowledge),
                         "' '".join(indirectKnowledge)))
 
-    def get_play(self, p):
-        """Retrieve and execute AI p's play for whoever's turn it is."""
+
+    def execute_play(self, play):
+        """ Execute the given play"""
         if self.log and self.turnNumber != 0: self.printAllKnowledge()
 
-        play = playType, playValue = p.play(self)
+        playType, playValue = play
         self.playHistory.append(play)
         hand = self.h[self.whoseTurn]
 
@@ -208,6 +209,12 @@ class Round:
             self.gameOverTimer = self.nPlayers # Begin last turns when deck depletes.
         if type(self.gameOverTimer) is int:
             self.gameOverTimer -= 1 # Count down in the last turns.
+
+
+    def ai_play(self, p):
+        """Retrieve and execute AI p's play for whoever's turn it is."""
+        play = playType, playValue = p.play(self)
+        self.execute_play(play)
 
 
 
