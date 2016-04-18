@@ -7,22 +7,16 @@ in another module (hanabi_classes).
 
 from hanabi_classes import *
 
-def play_one_round(gameType, players, names, verbosity, deck=None):
+def play_one_round(gameType, playerInfo, verbosity, deck=None):
     """Play a full round and return the score (int)."""
-    r = Round(gameType, names, verbosity, deck) # Instance of a single Hanabi round
-    r.deal_hands()
+    g = HanabiGame(gameType, playerInfo, verbosity, deck)
+    g.start()
 
-    while r.gameOverTimer != 0:
+    while not g.game_over():
 
-        if all(x == max(SUIT_CONTENTS) for x in r.progress.values()):
-            break # End round early if already won.
+        g.next() # Play one turn.
 
-        if r.lightning == N_LIGHTNING:
-            return 0 # Award no points for a loss.  TODO: togglable behavior?
-
-        r.ai_play(players[r.whoseTurn]) # Play one turn.
-
-    return sum(r.progress.values()) # Final score
+    return sum(g.round.progress.values()) # Final score
 
 class HanabiGame:
     """Manage a game of Hanabi. Primarily allow the capability to initialize, step
@@ -39,18 +33,18 @@ class HanabiGame:
         self.verbosity = verbosity
         self.deck = deck
 
-    def player_types():
+    def player_types(self):
         return [playerInfo[0] for playerInfo in self.playerInfo]
 
-    def player_names():
+    def player_names(self):
         return [playerInfo[1] for playerInfo in self.playerInfo]
 
-    def player_instances():
+    def player_instances(self):
         return [playerInfo[2] for playerInfo in self.playerInfo]
 
     def start(self):
         self.round = Round(self.gameType, self.player_names(), self.verbosity, self.deck)
-        self.deal_hands()
+        self.round.deal_hands()
 
     def reset(self):
         self.round = None
@@ -63,14 +57,16 @@ class HanabiGame:
     def game_over(self):
         if not self.round:
             return False
-        return self.round.gameOverTimer == 0
+
+        if self.round.gameOverTimer == 0:
+            return True
 
     def next(self):
         if not self.round:
             self.start()
 
-        pInstances = self.playerInstances()
-        self.round.get_play(pInstances[self.round.whoseTurn])
+        pInstances = self.player_instances()
+        self.round.ai_play(pInstances[self.round.whoseTurn])
 
     def prev(self):
         # unimplemented

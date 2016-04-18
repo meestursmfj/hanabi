@@ -87,12 +87,14 @@ if args.verbosity == 'log':
                 .format(strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()),
                 args.nRounds, args.gameType))
 
+playerInfo = list(zip(rawNames, names, players))
+
 # Play rounds.
 scores = []
 for i in range(args.nRounds):
     if args.verbosity in ('verbose', 'log'):
         logger.info('\n' + 'ROUND {}:'.format(i))
-    score = play_one_round(args.gameType, players, names, args.verbosity)
+    score = play_one_round(args.gameType, playerInfo, args.verbosity)
     scores.append(score)
     if args.verbosity != 'silent':
         logger.info('Score: ' + str(score))
