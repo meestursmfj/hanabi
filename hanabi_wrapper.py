@@ -7,57 +7,51 @@ Command-line arguments (see usage):
     they're just another regular suit (effectively purple)
   n_rounds: Number of rounds to play
   verbosity: How much output to show ('silent', only final average scores;
-    'scores', result of each round; 'verbose', play by play)
+    'scores', result of each round; 'verbose', play by play; 'log',
+    detailed log file for the gamestate at each play)
 """
 
-import sys
+import sys, argparse
+import logging
+from time import gmtime, strftime
 from scipy import stats, mean
 from play_hanabi import play_one_round
 from cheating_idiot_player import CheatingIdiotPlayer
 from most_basic_player import MostBasicPlayer
 from basic_rainbow_player import BasicRainbowPlayer
-### TODO: IMPORT YOUR PLAYER HERE
+from newest_card_player import NewestCardPlayer
+### TODO: IMPORT YOUR PLAYER
 
-def usage():
-    """Print a standard Unix usage string."""
-    print('usage: {} p1 p2 [p3 ...] game_type n_rounds verbosity'
-          .format(sys.argv[0]))
-    print('  pi (AI for player i): cheater, basic, or brainbow')
-    print('  game_type: rainbow, purple, or vanilla')
-    print('  n_rounds: positive int')
-    print('  verbosity: silent, scores, or verbose')
-    sys.exit(2)
+# Define all available players
+### TODO: ADD YOUR PLAYER
+availablePlayers = {'cheater'  : CheatingIdiotPlayer,
+                    'basic'    : MostBasicPlayer,
+                    'brainbow' : BasicRainbowPlayer,
+                    'newest'   : NewestCardPlayer}
 
+# Parse command-line args.
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('requiredPlayers', metavar='p', type=str, nargs=2,
+                    help=', '.join(availablePlayers.keys()))
+parser.add_argument('morePlayers', metavar='p', type=str, nargs='*')
+parser.add_argument('gameType', metavar='game_type', type=str,
+                    help='rainbow, purple, or vanilla')
+parser.add_argument('nRounds', metavar='n_rounds', type=int,
+                    help='positive int')
+parser.add_argument('verbosity', metavar='verbosity', type=str,
+                    help='silent, scores, verbose, or log')
+args = parser.parse_args()
 
-if len(sys.argv) < 6:
-    usage()
-
-gameType = sys.argv[-3]
-assert gameType in ('rainbow', 'purple', 'vanilla')
-
-nRounds = int(sys.argv[-2])
-assert nRounds > 0
-
-verbosity = sys.argv[-1]
-assert verbosity in ('silent', 'scores', 'verbose')
+assert args.gameType in ('rainbow', 'purple', 'vanilla')
+assert args.nRounds > 0
+assert args.verbosity in ('silent', 'scores', 'verbose', 'log')
 
 # Load players.
-rawNames = sys.argv[1:-3]
 players = []
+rawNames = args.requiredPlayers + args.morePlayers
 for i in range(len(rawNames)):
-    if rawNames[i] == 'cheater':
-        players.append(CheatingIdiotPlayer())
-    elif rawNames[i] == 'basic':
-        players.append(MostBasicPlayer())
-    elif rawNames[i] == 'brainbow':
-        players.append(BasicRainbowPlayer())
-    ### TODO: YOUR NEW PLAYER NAME GOES HERE
-    # elif rawNames[i] == 'yourDumbName':
-    #     players.append(YourDumbPlayer())
-    ###
-    else:
-        raise Exception('Unrecognized player type')
-
+    assert rawNames[i] in availablePlayers
+    players.append(availablePlayers[rawNames[i]]())
     rawNames[i] = rawNames[i].capitalize()
 
 # Resolve duplicate names by appending '1', '2', etc. as needed.
@@ -79,19 +73,35 @@ for i in range(len(names)):
     while len(names[i]) < len(longestName):
         names[i] += ' '
 
+# Create logging object for all output
+logger = logging.getLogger('game_log')
+logger.setLevel(logging.DEBUG)
+ch = logging.FileHandler('games.log') if args.verbosity == 'log'\
+                                else logging.StreamHandler()
+ch.setLevel(logging.INFO)
+logger.addHandler(ch)
+
+if args.verbosity == 'log':
+    logger.info('#'*22 + ' NEW ROUNDSET ' + '#'*22)
+    logger.info('{} ROUNDSET: {} round(s) of {} Hanabi'\
+                .format(strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()),
+                args.nRounds, args.gameType))
+
 # Play rounds.
 scores = []
-for i in range(nRounds):
-    if verbosity == 'verbose':
-        print('\n' + 'ROUND {}:'.format(i))
-    score = play_one_round(gameType, players, names, verbosity)
+for i in range(args.nRounds):
+    if args.verbosity in ('verbose', 'log'):
+        logger.info('\n' + 'ROUND {}:'.format(i))
+    score = play_one_round(args.gameType, players, names, args.verbosity)
     scores.append(score)
-    if verbosity != 'silent':
-        print('Score: ' + str(score))
+    if args.verbosity != 'silent':
+        logger.info('Score: ' + str(score))
 
 # Print average scores.
-if verbosity != 'silent':
-    print('')
+if args.verbosity != 'silent':
+    logger.info('')
 if len(scores) > 1: # Only print stats if there were multiple rounds.
-    print('AVERAGE SCORE (+/- 1 std. err.): {} +/- {}'\
+    logger.info('AVERAGE SCORE (+/- 1 std. err.): {} +/- {}'\
                 .format(str(mean(scores))[:5], str(stats.sem(scores))[:4]))
+elif args.verbosity == 'silent': # Still print score for silent single round
+    logger.info('Score: ' + str(scores[0]))
