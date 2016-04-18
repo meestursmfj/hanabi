@@ -16,7 +16,7 @@ def play_one_round(gameType, playerInfo, verbosity, deck=None):
 
         g.next() # Play one turn.
 
-    return sum(g.round.progress.values()) # Final score
+    return g.round.score() # Final score
 
 class HanabiGame:
     """Manage a game of Hanabi. Primarily allow the capability to initialize, step
@@ -57,9 +57,7 @@ class HanabiGame:
     def game_over(self):
         if not self.round:
             return False
-
-        if self.round.gameOverTimer == 0:
-            return True
+        return self.round.game_over()
 
     def next(self):
         if not self.round:

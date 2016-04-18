@@ -216,6 +216,31 @@ class Round:
         play = playType, playValue = p.play(self)
         self.execute_play(play)
 
+    def game_over(self):
+
+        # We're out of turns.
+        if self.gameOverTimer == 0:
+            return True
+
+        # We blew up!
+        if self.lightning == N_LIGHTNING:
+            return True
+
+        # We won!
+        if all(x == max(SUIT_CONTENTS) for x in self.progress.values()):
+            return True
+
+    def score(self):
+
+        # We blew up!
+        # TODO: make the end score togglable when losing due to blowing up
+        if self.lightning == N_LIGHTNING:
+            return 0
+
+        # Otherwise, get the number of succesful cards played
+        return sum(self.progress.values())
+
+
 
 
     class Hand:
