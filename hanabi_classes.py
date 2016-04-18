@@ -204,6 +204,12 @@ class Round:
                             playType, description))
             self.zazz[1] = ' ' * len(self.zazz[1])
 
+        if self.deck == [] and self.gameOverTimer == None:
+            self.gameOverTimer = self.nPlayers # Begin last turns when deck depletes.
+        if type(self.gameOverTimer) is int:
+            self.gameOverTimer -= 1 # Count down in the last turns.
+
+
 
     class Hand:
         """Manage one player's hand of cards.
