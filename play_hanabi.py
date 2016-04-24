@@ -16,6 +16,7 @@ def play_one_round(gameType, playerInfo, verbosity, deck=None):
 
         g.next() # Play one turn.
 
+    g.save("output/test.pgn".format())
     return g.round.score() # Final score
 
 class HanabiGame:
@@ -25,7 +26,7 @@ class HanabiGame:
     level.
     """
 
-    def __init__(self, gameType="vanilla", playerInfo=(), verbosity="silent", deck=None):
+    def __init__(self, gameType="vanilla", playerInfo=[], verbosity="silent", deck=None):
 
         # For now, just save the argument information
         self.gameType = gameType
@@ -44,6 +45,8 @@ class HanabiGame:
 
     def start(self):
         self.round = Round(self.gameType, self.player_names(), self.verbosity, self.deck)
+        if not self.deck:
+            self.deck = deepcopy(self.round.deck)
         self.round.deal_hands()
 
     def reset(self):
@@ -66,14 +69,43 @@ class HanabiGame:
         pInstances = self.player_instances()
         self.round.ai_play(pInstances[self.round.whoseTurn])
 
+    def __write_tag(self, savefile, name, value):
+        savefile.write('[{} "{}"]\n'.format(name, value))
+
     def prev(self):
-        # unimplemented
+
         return
 
-    def save(self):
-        # unimplemented
-        return
+    def save(self, filename):
 
-    def load(self):
+        with open(filename, "w") as savefile:
+
+            if self.gameType:
+                self.__write_tag(savefile, "GameType", self.gameType)
+
+            for i, playerType in enumerate(self.player_types()):
+                self.__write_tag(savefile, "Player{}Type".format(i), playerType)
+
+            for i, playerName in enumerate(self.player_names()):
+                self.__write_tag(savefile, "Player{}Name".format(i), playerName)
+
+            if self.deck:
+                self.__write_tag(savefile, "Deck", " ".join(self.deck))
+
+            savefile.write("\n")
+
+            for play in self.round.playHistory:
+                action, data = play
+                if (action == "play"):
+                    savefile.write("{} {}\n".format(action, data['name']))
+
+                elif (action == "discard"):
+                    savefile.write("{} {}\n".format(action, data['name']))
+
+                elif (action == "hint"):
+                    target, info = data
+                    savefile.write("{} {} {}\n".format(action, info, target+1))
+
+    def load(self, filename):
         # unimplemented
         return
